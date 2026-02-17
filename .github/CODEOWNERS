@@ -1,0 +1,11 @@
+# Default owners for everything in the repo
+* @agentcrate/maintainers
+
+# Proto definitions
+/proto/ @agentcrate/maintainers
+
+# CI/CD
+/.github/ @agentcrate/maintainers
+
+# Documentation
+*.md @agentcrate/maintainers

@@ -1,0 +1,84 @@
+syntax = "proto3";
+
+package agentcrate.v1;
+
+// ModelRegistryService provides read-only access to CrateHub's model catalog.
+// Queried by the CLI during `crate init` (interactive wizard) and by the
+// runtime to resolve model identifiers to connection details.
+//
+// This is a public, unauthenticated API.
+service ModelRegistryService {
+  // ListModels returns the catalog of available model providers and identifiers.
+  rpc ListModels(ListModelsRequest) returns (ListModelsResponse);
+
+  // SearchModels searches the model catalog by free-text query.
+  // Matches against name, provider, model ID, and description.
+  rpc SearchModels(SearchModelsRequest) returns (SearchModelsResponse);
+
+  // ResolveModel resolves a model identifier to its connection details.
+  // Called at runtime to configure the LLM client.
+  rpc ResolveModel(ResolveModelRequest) returns (ResolveModelResponse);
+}
+
+// ModelEntry describes a model available in the catalog.
+// Contains everything the runtime needs to connect. Adding a new model
+// to the registry is just a database row.
+message ModelEntry {
+  // Display name for UIs: "GPT-4o", "Claude Sonnet 4"
+  string name = 1;
+  // Provider identifier: "openai", "anthropic", "google", "ollama"
+  string provider = 2;
+  // Provider-qualified model ID used in the Agentfile: "openai/gpt-4o"
+  string model = 3;
+  // Short description for UI display.
+  string description = 4;
+  // The API family this model uses. The runtime has a small set of adapters
+  // that handle all models of a given type. One of:
+  //   "openai"    - OpenAI chat completions API (also: Together, Groq, Fireworks, Ollama, Azure, Mistral)
+  //   "gemini"    - Google Gemini native API
+  //   "anthropic" - Anthropic Messages API
+  string api_type = 5;
+  // Default base URL for the provider's API.
+  string api_base = 6;
+  // Environment variable name that holds the API key.
+  // Empty means no auth required (e.g., local Ollama).
+  string auth_env_var = 7;
+  // Environment variable that overrides api_base at runtime.
+  // Empty means api_base is always used as-is.
+  string host_env_var = 8;
+}
+
+// ── List ─────────────────────────────────────────────────────────────
+
+message ListModelsRequest {
+  // Optional provider filter (e.g., "openai", "anthropic", "google").
+  string provider = 1;
+}
+
+message ListModelsResponse {
+  repeated ModelEntry models = 1;
+}
+
+// ── Search ───────────────────────────────────────────────────────────
+
+message SearchModelsRequest {
+  // Free-text query. Matched against name, provider, model ID, description.
+  string query = 1;
+  // Maximum results. 0 = server default.
+  int32 limit = 2;
+}
+
+message SearchModelsResponse {
+  repeated ModelEntry models = 1;
+}
+
+// ── Resolve ──────────────────────────────────────────────────────────
+
+message ResolveModelRequest {
+  // The model identifier to resolve: "openai/gpt-4o"
+  string model = 1;
+}
+
+message ResolveModelResponse {
+  ModelEntry model = 1;
+}

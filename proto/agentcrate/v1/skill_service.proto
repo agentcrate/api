@@ -1,0 +1,78 @@
+syntax = "proto3";
+
+package agentcrate.v1;
+
+// SkillRegistryService provides read-only access to CrateHub's skill catalog.
+// Queried by the CLI during `crate init` (interactive wizard) and at build
+// time to resolve mcp-type skill references to concrete transports.
+//
+// This is a public, unauthenticated API.
+service SkillRegistryService {
+  // ListSkills returns the catalog of available MCP skills/tools.
+  rpc ListSkills(ListSkillsRequest) returns (ListSkillsResponse);
+
+  // SearchSkills searches the skill catalog by free-text query.
+  // Matches against name, source, and description.
+  rpc SearchSkills(SearchSkillsRequest) returns (SearchSkillsResponse);
+
+  // ResolveSkill resolves a registry skill reference to its concrete
+  // transport details. Called at build time for mcp-type skills.
+  rpc ResolveSkill(ResolveSkillRequest) returns (ResolveSkillResponse);
+}
+
+// SkillEntry describes a skill available in the catalog.
+message SkillEntry {
+  // Skill identifier: "web-search"
+  string name = 1;
+  // Transport type: "mcp", "http", "stdio", "sse"
+  string type = 2;
+  // Registry reference or endpoint: "cratehub.ai/tools/web-search"
+  string source = 3;
+  // Short description for UI display.
+  string description = 4;
+  // Whether this skill has been verified by CrateHub.
+  bool verified = 5;
+  // SHA256 checksum for stdio binaries.
+  string sha256 = 6;
+  // Human-readable version of the resolved skill.
+  string version = 7;
+  // Installation type for stdio skills: "curl", "npx", "pkg"
+  string install_type = 8;
+  // installation args for stdio skills
+  repeated string install_args = 9;
+}
+
+// ── List ─────────────────────────────────────────────────────────────
+
+message ListSkillsRequest {
+  // Optional type filter: "http", "stdio", "sse"
+  string type = 1;
+}
+
+message ListSkillsResponse {
+  repeated SkillEntry skills = 1;
+}
+
+// ── Search ───────────────────────────────────────────────────────────
+
+message SearchSkillsRequest {
+  // Free-text query. Matched against name, source, description.
+  string query = 1;
+  // Maximum results. 0 = server default.
+  int32 limit = 2;
+}
+
+message SearchSkillsResponse {
+  repeated SkillEntry skills = 1;
+}
+
+// ── Resolve ──────────────────────────────────────────────────────────
+
+message ResolveSkillRequest {
+  // The registry reference to resolve: "cratehub.ai/tools/web-search"
+  string source = 1;
+}
+
+message ResolveSkillResponse {
+  SkillEntry skill = 1;
+}

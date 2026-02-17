@@ -1,0 +1,32 @@
+# https://docs.github.com/en/repositories/releasing-projects-on-github/automatically-generated-release-notes
+changelog:
+  exclude:
+    labels:
+      - "skip-changelog"
+    authors:
+      - "dependabot"
+  categories:
+    - title: "🚀 Features"
+      labels:
+        - "enhancement"
+        - "feature"
+    - title: "🐛 Bug Fixes"
+      labels:
+        - "bug"
+        - "fix"
+    - title: "📖 Documentation"
+      labels:
+        - "documentation"
+    - title: "🔒 Security"
+      labels:
+        - "security"
+    - title: "💥 Breaking Changes"
+      labels:
+        - "breaking"
+    - title: "🏗️ Infrastructure"
+      labels:
+        - "ci"
+        - "dependencies"
+    - title: "🔧 Other Changes"
+      labels:
+        - "*"
