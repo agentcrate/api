@@ -1,0 +1,56 @@
+syntax = "proto3";
+
+package agentcrate.v1;
+
+// AuthService handles CLI authentication against CrateHub.
+//
+// The flow is:
+//  1. CLI opens the browser to Clerk's login page.
+//  2. After login, Clerk redirects to the CLI's local callback with a session token.
+//  3. CLI calls ExchangeToken with the Clerk session token.
+//  4. CrateHub verifies the Clerk JWT and returns the user's identity.
+//  5. CLI stores the token locally for subsequent authenticated API calls.
+//
+// This is an authenticated service — the Clerk JWT must be passed as a
+// Bearer token in the Authorization header.
+service AuthService {
+  // ExchangeToken verifies the caller's Clerk session token and returns
+  // the associated CrateHub user identity. The Clerk JWT is read from the
+  // Authorization header (Bearer token), not from the request body.
+  //
+  // Called by `crate login` after the browser-based Clerk OAuth flow
+  // completes. The CLI uses this to confirm the token is valid and to
+  // retrieve the user's namespace and display name.
+  rpc ExchangeToken(ExchangeTokenRequest) returns (ExchangeTokenResponse);
+
+  // GetIdentity returns the identity of the currently authenticated user.
+  // Equivalent to `crate whoami` — reads the Bearer token and returns
+  // the associated user info without any side effects.
+  rpc GetIdentity(GetIdentityRequest) returns (GetIdentityResponse);
+}
+
+// ExchangeTokenRequest is intentionally empty — the Clerk JWT is extracted
+// from the Authorization header by the auth middleware.
+message ExchangeTokenRequest {}
+
+message ExchangeTokenResponse {
+  // Clerk user ID (e.g. "user_2abc123").
+  string user_id = 1;
+  // CrateHub display username.
+  string username = 2;
+  // User's publishing namespace on CrateHub.
+  string namespace = 3;
+}
+
+// GetIdentityRequest is intentionally empty — identity comes from the
+// Authorization header.
+message GetIdentityRequest {}
+
+message GetIdentityResponse {
+  // Clerk user ID.
+  string user_id = 1;
+  // CrateHub display username.
+  string username = 2;
+  // User's publishing namespace.
+  string namespace = 3;
+}
